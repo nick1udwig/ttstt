@@ -349,24 +349,38 @@ impl TtsttState {
             .await
             .map_err(|e| format!("Failed to create pair directory: {:?}", e))?;
 
-        // Save metadata (without audio data to keep it small)
-        let metadata = serde_json::json!({
-            "id": pair.id,
-            "text": pair.text,
-            "audio_format": pair.audio_format,
-            "provider": pair.provider,
-            "timestamp": pair.timestamp,
-            "request_type": pair.request_type,
-            "metadata": pair.metadata,
-        });
+        // Create metadata struct (without audio data to keep it small)
+        #[derive(Serialize)]
+        struct PairMetadata<'a> {
+            id: &'a str,
+            text: &'a str,
+            audio_format: &'a str,
+            provider: &'a Provider,
+            timestamp: &'a str,
+            request_type: &'a RequestType,
+            metadata: &'a Vec<(String, String)>,
+        }
+
+        let metadata = PairMetadata {
+            id: &pair.id,
+            text: &pair.text,
+            audio_format: &pair.audio_format,
+            provider: &pair.provider,
+            timestamp: &pair.timestamp,
+            request_type: &pair.request_type,
+            metadata: &pair.metadata,
+        };
 
         let metadata_path = format!("{}/metadata.json", base_path);
         let metadata_file = create_file_async(&metadata_path, Some(5))
             .await
             .map_err(|e| format!("Failed to create metadata file: {:?}", e))?;
 
+        let metadata_json = serde_json::to_string(&metadata)
+            .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
+
         metadata_file
-            .write(metadata.to_string().as_bytes())
+            .write(metadata_json.as_bytes())
             .await
             .map_err(|e| format!("Failed to write metadata: {:?}", e))?;
 
@@ -440,6 +454,18 @@ impl TtsttState {
     }
 
     async fn load_audio_text_pair_by_path(&self, path: &str) -> Result<AudioTextPair, String> {
+        // Define metadata struct for deserialization
+        #[derive(Deserialize)]
+        struct PairMetadata {
+            id: String,
+            text: String,
+            audio_format: String,
+            provider: Provider,
+            timestamp: String,
+            request_type: RequestType,
+            metadata: Vec<(String, String)>,
+        }
+
         // Load metadata
         let metadata_path = format!("{}/metadata.json", path);
         let metadata_file = open_file_async(&metadata_path, false, Some(5))
@@ -451,16 +477,11 @@ impl TtsttState {
             .await
             .map_err(|e| format!("Failed to read metadata: {:?}", e))?;
 
-        let metadata: serde_json::Value = serde_json::from_str(&metadata_str)
+        let metadata: PairMetadata = serde_json::from_str(&metadata_str)
             .map_err(|e| format!("Failed to parse metadata: {}", e))?;
 
         // Determine audio file extension
-        let audio_format = metadata
-            .get("audio_format")
-            .and_then(|v| v.as_str())
-            .unwrap_or("audio");
-
-        let audio_ext = match audio_format {
+        let audio_ext = match metadata.audio_format.as_str() {
             "webm" => "webm",
             "mp3" => "mp3",
             _ => "audio",
@@ -482,59 +503,14 @@ impl TtsttState {
 
         // Construct AudioTextPair
         Ok(AudioTextPair {
-            id: metadata
-                .get("id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            text: metadata
-                .get("text")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
+            id: metadata.id,
+            text: metadata.text,
             audio_data,
-            audio_format: audio_format.to_string(),
-            provider: serde_json::from_value(
-                metadata
-                    .get("provider")
-                    .cloned()
-                    .unwrap_or(serde_json::Value::Null),
-            )
-            .unwrap_or(Provider::OpenAI),
-            timestamp: metadata
-                .get("timestamp")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            request_type: serde_json::from_value(
-                metadata
-                    .get("request_type")
-                    .cloned()
-                    .unwrap_or(serde_json::Value::Null),
-            )
-            .unwrap_or(RequestType::TTS),
-            metadata: metadata
-                .get("metadata")
-                .and_then(|v| v.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| {
-                            if let Some(arr) = v.as_array() {
-                                if arr.len() == 2 {
-                                    Some((
-                                        arr[0].as_str().unwrap_or("").to_string(),
-                                        arr[1].as_str().unwrap_or("").to_string(),
-                                    ))
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        })
-                        .collect()
-                })
-                .unwrap_or_default(),
+            audio_format: metadata.audio_format,
+            provider: metadata.provider,
+            timestamp: metadata.timestamp,
+            request_type: metadata.request_type,
+            metadata: metadata.metadata,
         })
     }
 
