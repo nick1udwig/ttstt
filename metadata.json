@@ -1,0 +1,18 @@
+{
+  "name": "TTSTT",
+  "description": "Text-to-Speech & Speech-to-Text wrapper for multiple providers - manages TTS/STT requests through OpenAI and other providers",
+  "image": "",
+  "properties": {
+    "package_name": "ttstt",
+    "current_version": "0.1.0",
+    "publisher": "ttstt.os",
+    "mirrors": [],
+    "code_hashes": {
+      "0.1.0": ""
+    },
+    "wit_version": 1,
+    "dependencies": []
+  },
+  "external_url": "",
+  "animation_url": ""
+}
