@@ -15,10 +15,12 @@ git = "https://github.com/hyperware-ai/hyperprocess-macro"
 rev = "66884c0"
 
 [dependencies.hyperware-openai-stt]
-path = "../../hyperware-openai-ttstt/hyperware-openai-stt"
+git = "https://github.com/hyperware-ai/hyperware-openai-ttstt"
+rev = "6480c1c"
 
 [dependencies.hyperware-openai-tts]
-path = "../../hyperware-openai-ttstt/hyperware-openai-tts"
+git = "https://github.com/hyperware-ai/hyperware-openai-ttstt"
+rev = "6480c1c"
 
 [dependencies.hyperware_process_lib]
 features = ["hyperapp"]

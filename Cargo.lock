@@ -1803,6 +1803,7 @@ dependencies = [
 [[package]]
 name = "hyperware-openai-stt"
 version = "0.1.0"
+source = "git+https://github.com/hyperware-ai/hyperware-openai-ttstt?rev=6480c1c#6480c1c6121ff9f56291e4170da94b85a0a75d3b"
 dependencies = [
  "base64 0.22.1",
  "http",
@@ -1817,6 +1818,7 @@ dependencies = [
 [[package]]
 name = "hyperware-openai-tts"
 version = "0.1.0"
+source = "git+https://github.com/hyperware-ai/hyperware-openai-ttstt?rev=6480c1c#6480c1c6121ff9f56291e4170da94b85a0a75d3b"
 dependencies = [
  "http",
  "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc)",
