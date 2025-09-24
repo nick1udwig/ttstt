@@ -571,7 +571,7 @@ impl TtsttState {
 impl TtsttState {
     #[init]
     async fn initialize(&mut self) {
-        add_to_homepage("TTSTT", None, Some("/"), None);
+        add_to_homepage("Spider TTSTT", None, Some("/"), None);
 
         // Generate initial admin key if not exists
         if self.admin_key.is_empty() {
