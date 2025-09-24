@@ -2,7 +2,13 @@
 
 import { create } from 'zustand';
 import * as api from '../utils/api';
-import { Provider, ProviderConfig, ApiKey, AudioTextPair } from '../types/ttstt';
+import { Provider, ProviderConfig } from '../types/ttstt';
+import type { 
+  Provider as ApiProvider, 
+  ProviderInfo, 
+  ApiKeyInfo, 
+  AudioTextPair
+} from '../../../target/ui/caller-utils';
 
 // Audio Recorder class for STT
 class AudioRecorder {
@@ -43,8 +49,8 @@ class AudioRecorder {
 
 interface TtsttStore {
   // State
-  providers: ProviderConfig[];
-  apiKeys: ApiKey[];
+  providers: ProviderInfo[];
+  apiKeys: ApiKeyInfo[];
   history: AudioTextPair[];
   isRecording: boolean;
   audioUrl: string | null;
@@ -100,8 +106,7 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await api.getAdminKey();
-      const data = JSON.parse(response);
-      set({ adminKey: data.adminKey });
+      set({ adminKey: response.admin_key });
     } catch (error) {
       // Admin key already retrieved or error
       console.log('Admin key not available');
@@ -118,8 +123,7 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
   loadProviders: async () => {
     try {
       set({ isLoading: true, error: null });
-      const response = await api.getProviders();
-      const providers = JSON.parse(response);
+      const providers = await api.getProviders();
       set({ providers });
     } catch (error: any) {
       const errorMessage = error?.details || error?.message || error;
@@ -135,15 +139,17 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      await api.addProvider(JSON.stringify({
-        apiKey: adminKey,
+      await api.addProvider({
+        api_key: adminKey,
         config: {
-          provider: config.provider,
-          api_key: config.apiKey,
+          provider: config.provider === 'OpenAI' ? 'OpenAi' as ApiProvider : config.provider as ApiProvider,
+          api_key: config.apiKey || '',
           is_default_tts: config.isDefaultTts,
           is_default_stt: config.isDefaultStt,
+          default_voice: null,
+          default_speed: null,
         },
-      }));
+      });
       
       await get().loadProviders();
     } catch (error: any) {
@@ -160,10 +166,10 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      await api.removeProvider(JSON.stringify({
-        apiKey: adminKey,
-        provider,
-      }));
+      await api.removeProvider({
+        api_key: adminKey,
+        provider: provider === 'OpenAI' ? 'OpenAi' as ApiProvider : provider as ApiProvider,
+      });
       
       await get().loadProviders();
     } catch (error) {
@@ -179,11 +185,11 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      await api.setDefaultProvider(JSON.stringify({
-        apiKey: adminKey,
-        provider,
-        type,
-      }));
+      await api.setDefaultProvider({
+        api_key: adminKey,
+        provider: provider === 'OpenAI' ? 'OpenAi' as ApiProvider : provider as ApiProvider,
+        provider_type: type,
+      });
       
       await get().loadProviders();
     } catch (error) {
@@ -200,8 +206,7 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      const response = await api.listApiKeys(JSON.stringify({ apiKey: adminKey }));
-      const apiKeys = JSON.parse(response);
+      const apiKeys = await api.listApiKeys({ api_key: adminKey });
       set({ apiKeys });
     } catch (error) {
       set({ error: `Failed to load API keys: ${error}` });
@@ -216,15 +221,14 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      const response = await api.generateApiKey(JSON.stringify({
-        apiKey: adminKey,
+      const response = await api.generateApiKey({
+        api_key: adminKey,
         name,
         role,
-      }));
+      });
       
-      const data = JSON.parse(response);
       await get().loadApiKeys();
-      return data.key;
+      return response.key;
     } catch (error) {
       set({ error: `Failed to generate API key: ${error}` });
       throw error;
@@ -239,10 +243,10 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
       const adminKey = get().adminKey;
       if (!adminKey) throw new Error('Admin key required');
       
-      await api.revokeApiKey(JSON.stringify({
-        apiKey: adminKey,
-        keyToRevoke,
-      }));
+      await api.revokeApiKey({
+        api_key: adminKey,
+        key_to_revoke: keyToRevoke,
+      });
       
       await get().loadApiKeys();
     } catch (error) {
@@ -257,17 +261,16 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null, audioUrl: null });
       
-      const response = await api.testTts(JSON.stringify({ text }));
-      const data = JSON.parse(response);
+      const response = await api.testTts({ text });
       
       // Convert base64 to blob URL
-      const audioData = atob(data.audio_data);
+      const audioData = atob(response.audio_data);
       const audioArray = new Uint8Array(audioData.length);
       for (let i = 0; i < audioData.length; i++) {
         audioArray[i] = audioData.charCodeAt(i);
       }
       
-      const blob = new Blob([audioArray], { type: `audio/${data.format}` });
+      const blob = new Blob([audioArray], { type: `audio/${response.format}` });
       const url = URL.createObjectURL(blob);
       
       set({ audioUrl: url });
@@ -311,12 +314,11 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
         const base64Data = base64.split(',')[1];
         
         try {
-          const response = await api.testStt(JSON.stringify({
-            audioData: base64Data,
-          }));
+          const response = await api.testStt({
+            audio_data: base64Data,
+          });
           
-          const data = JSON.parse(response);
-          set({ transcribedText: data.text, isRecording: false });
+          set({ transcribedText: response.text, isRecording: false });
         } catch (error: any) {
           // Extract the actual error message from the API response
           const errorMessage = error?.details || error?.message || error;
@@ -338,8 +340,7 @@ const useTtsttStore = create<TtsttStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
-      const response = await api.getHistory(JSON.stringify({ limit, offset }));
-      const history = JSON.parse(response);
+      const history = await api.getHistory({ limit, offset });
       set({ history });
     } catch (error) {
       set({ error: `Failed to load history: ${error}` });

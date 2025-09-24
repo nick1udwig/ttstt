@@ -100,10 +100,10 @@ function ApiKeysPage() {
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                      {new Date(key.createdAt).toLocaleDateString()}
+                      {new Date(key.created_at).toLocaleDateString()}
                     </td>
                     <td style={{ padding: '0.75rem' }}>
-                      <code style={{ fontSize: '0.875rem' }}>{key.keyPreview}</code>
+                      <code style={{ fontSize: '0.875rem' }}>{key.key_preview}</code>
                     </td>
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                       <button

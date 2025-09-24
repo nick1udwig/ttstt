@@ -1806,7 +1806,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "http",
- "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=4beff93)",
+ "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc)",
  "rand 0.8.5",
  "serde",
  "serde_json",
@@ -1819,7 +1819,7 @@ name = "hyperware-openai-tts"
 version = "0.1.0"
 dependencies = [
  "http",
- "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=4beff93)",
+ "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc)",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -1829,7 +1829,7 @@ dependencies = [
 [[package]]
 name = "hyperware_process_lib"
 version = "2.2.0"
-source = "git+https://github.com/hyperware-ai/process_lib?rev=4beff93#4beff9389598978d2f97e4cd6d1d0f74a7acac0f"
+source = "git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc#0e1aaccc99a76355be747036b5acdf17fdf47b5c"
 dependencies = [
  "alloy",
  "alloy-primitives",
@@ -3681,7 +3681,7 @@ dependencies = [
  "hyperprocess_macro",
  "hyperware-openai-stt",
  "hyperware-openai-tts",
- "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=4beff93)",
+ "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc)",
  "process_macros",
  "serde",
  "serde_json",
@@ -3697,7 +3697,7 @@ dependencies = [
  "anyhow",
  "futures",
  "futures-util",
- "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=4beff93)",
+ "hyperware_process_lib 2.2.0 (git+https://github.com/hyperware-ai/process_lib?rev=0e1aacc)",
  "once_cell",
  "process_macros",
  "serde",

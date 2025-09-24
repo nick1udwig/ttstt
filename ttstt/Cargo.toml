@@ -23,7 +23,7 @@ path = "../../hyperware-openai-ttstt/hyperware-openai-tts"
 [dependencies.hyperware_process_lib]
 features = ["hyperapp"]
 git = "https://github.com/hyperware-ai/process_lib"
-rev = "4beff93"
+rev = "0e1aacc"
 
 [dependencies.serde]
 features = ["derive"]

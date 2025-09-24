@@ -62,12 +62,15 @@ function SettingsPage() {
 
   const handleUpdateProviderSettings = async (provider: Provider, voice: string, speed: number) => {
     // Find the existing provider config
-    const existingProvider = providers.find(p => p.provider === provider);
+    const existingProvider = providers.find(p => p.provider === (provider === 'OpenAI' ? 'OpenAi' : provider));
     if (existingProvider) {
       // Update the provider with new settings
       await removeProvider(provider);
       await addProvider({
-        ...existingProvider,
+        provider: provider,
+        apiKey: '',  // We don't have the original API key here
+        isDefaultTts: existingProvider.is_default_tts,
+        isDefaultStt: existingProvider.is_default_stt,
         defaultVoice: voice,
         defaultSpeed: speed,
       });
@@ -93,11 +96,11 @@ function SettingsPage() {
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label>Default Voice</label>
                     <select
-                      value={provider.defaultVoice || 'nova'}
+                      value={provider.default_voice || 'nova'}
                       onChange={(e) => handleUpdateProviderSettings(
-                        provider.provider, 
+                        provider.provider === 'OpenAi' ? 'OpenAI' as Provider : provider.provider as Provider, 
                         e.target.value, 
-                        provider.defaultSpeed || 1.5
+                        provider.default_speed || 1.5
                       )}
                       disabled={isLoading}
                     >
@@ -117,17 +120,17 @@ function SettingsPage() {
                         min="0.25"
                         max="4.0"
                         step="0.25"
-                        value={provider.defaultSpeed || 1.5}
+                        value={provider.default_speed || 1.5}
                         onChange={(e) => handleUpdateProviderSettings(
-                          provider.provider,
-                          provider.defaultVoice || 'nova',
+                          provider.provider === 'OpenAi' ? 'OpenAI' as Provider : provider.provider as Provider,
+                          provider.default_voice || 'nova',
                           parseFloat(e.target.value)
                         )}
                         disabled={isLoading}
                         style={{ flex: 1 }}
                       />
                       <span style={{ minWidth: '3rem', textAlign: 'right' }}>
-                        {(provider.defaultSpeed || 1.5).toFixed(2)}x
+                        {(provider.default_speed || 1.5).toFixed(2)}x
                       </span>
                     </div>
                   </div>
@@ -139,8 +142,8 @@ function SettingsPage() {
                     <input
                       type="radio"
                       name="default-tts"
-                      checked={provider.isDefaultTts}
-                      onChange={() => handleSetDefault(provider.provider, 'tts')}
+                      checked={provider.is_default_tts}
+                      onChange={() => handleSetDefault(provider.provider === 'OpenAi' ? 'OpenAI' as Provider : provider.provider as Provider, 'tts')}
                       disabled={isLoading}
                       style={{ width: 'auto' }}
                     />
@@ -151,8 +154,8 @@ function SettingsPage() {
                     <input
                       type="radio"
                       name="default-stt"
-                      checked={provider.isDefaultStt}
-                      onChange={() => handleSetDefault(provider.provider, 'stt')}
+                      checked={provider.is_default_stt}
+                      onChange={() => handleSetDefault(provider.provider === 'OpenAi' ? 'OpenAI' as Provider : provider.provider as Provider, 'stt')}
                       disabled={isLoading}
                       style={{ width: 'auto' }}
                     />
@@ -162,7 +165,7 @@ function SettingsPage() {
 
                 {/* Remove Button */}
                 <button
-                  onClick={() => handleRemoveProvider(provider.provider)}
+                  onClick={() => handleRemoveProvider(provider.provider === 'OpenAi' ? 'OpenAI' as Provider : provider.provider as Provider)}
                   disabled={isLoading}
                   className="danger"
                   style={{ fontSize: '0.875rem' }}
